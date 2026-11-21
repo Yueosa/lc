@@ -1,0 +1,44 @@
+name: Linux compatibility
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cli:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+    env:
+      RUSTUP_TOOLCHAIN: '1.94.0'
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust target
+        run: |
+          rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
+          rustup target add "$TARGET"
+      - name: Test release CLI
+        run: cargo test --release --locked --target "$TARGET"
+      - name: Verify binary
+        run: |
+          cargo build --release --locked --target "$TARGET"
+          "target/$TARGET/release/lc" --version
+      - name: Smoke test on Alpine
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          docker run --rm --volume "$PWD/target/$TARGET/release/lc:/usr/local/bin/lc:ro" alpine:3 \
+            sh -eu -c 'cd /tmp; touch config.toml; lc init; lc set config.toml demo; test "$(lc get config.toml)" = demo'

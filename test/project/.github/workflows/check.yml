@@ -1,0 +1,9 @@
+name: Check example
+on: [push]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m compileall src tools

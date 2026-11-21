@@ -1,0 +1,9 @@
+[Unit]
+Description=Harbor device event collector
+
+[Service]
+WorkingDirectory=/opt/harbor
+ExecStart=/usr/bin/python3 src/server.py
+
+[Install]
+WantedBy=multi-user.target

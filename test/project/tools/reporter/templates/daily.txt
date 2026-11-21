@@ -1,0 +1,3 @@
+Harbor 日报
+日期：{{ date }}
+收到事件：{{ event_count }}
